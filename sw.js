@@ -1,12 +1,13 @@
 // Chess Peace Service Worker
 // Offline support + caching strategy
 
-const CACHE_NAME = 'chess-iphone-v1';
+const CACHE_NAME = 'chess-iphone-v2';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './solutions.json'
+  './solutions.json',
+  './icon192.png'
 ];
 
 // Install event – cache resurssit
