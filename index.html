@@ -824,6 +824,86 @@ button:active{
       transition-duration: 0.01ms !important;
     }
   }
+  
+  /* --- Help modal (iPhone) --- */
+.modal{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: max(10px, env(safe-area-inset-top)) 
+           max(12px, env(safe-area-inset-right))
+           max(12px, env(safe-area-inset-bottom))
+           max(12px, env(safe-area-inset-left));
+  box-sizing: border-box;
+}
+
+.modal.open{ display: flex; }
+
+.modalCard{
+  width: min(520px, 100%);
+  max-height: min(78vh, 620px);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 30px rgba(27,42,74,0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalTop{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 12px 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modalTitle{
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.modalClose{
+  width: 40px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.modalBody{
+  padding: 12px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  line-height: 1.35;
+  font-size: 14px;
+}
+
+.modalBody p{ margin: 0 0 10px 0; }
+
+.smallNote{
+  font-size: 12px;
+  color: var(--ink-light);
+}
+
+.modalBottom{
+  padding: 10px 12px 12px 12px;
+  border-top: 1px solid var(--line);
+  display:flex;
+  justify-content: flex-end;
+}
+
+.modalOk{
+  background: var(--btn2);
+  color: #fff;
+}
+
 </style>
 </head>
 
@@ -846,6 +926,7 @@ button:active{
         <button id="btnNew">🆕</button>
         <button id="btnHint">💡</button>
         <button id="btnClear">🗑️</button>
+		<button id="btnHelp">❓</button>
       </div>
     </div>
     <input type="file" id="fileSolutions" accept=".json" style="display:none">
@@ -873,13 +954,14 @@ button:active{
     <aside id="rightPane">
       <div id="palette">
 	          <div class="col compact">
-          <h3>Musta</h3>
-          <div id="blackCol" class="pieceGrid compact"></div>
-        </div>
-        <div class="col compact">
           <h3>Valkea</h3>
           <div id="whiteCol" class="pieceGrid compact"></div>
         </div>
+	          <div class="col compact">
+          <h3>Musta</h3>
+          <div id="blackCol" class="pieceGrid compact"></div>
+        </div>
+
 
       </div>
     </aside>
@@ -887,6 +969,37 @@ button:active{
 
   <footer id="status">Valmis!</footer>
 
+</div>
+<!-- OHJE-MODAL -->
+<div id="helpModal" class="modal" aria-hidden="true">
+  <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modalTop">
+      <div id="helpTitle" class="modalTitle">Ohjeet</div>
+      <button id="btnHelpClose" class="modalClose" aria-label="Sulje">✕</button>
+    </div>
+
+    <div class="modalBody">
+      <p><b>Tavoite:</b> Asettele kaikki laatat laudalle niin, että valkeat shakkinappulat eivät uhkaa mustia eivätkä mustat valkeita.</p>
+
+      <p><b>Ohjaus:</b><br>
+        • Napauta palettipalaa = valitse<br>
+        • Napauta samaa uudestaan = kierrä 90°<br>
+        • Napauta lautaa = aseta valittu pala<br>
+        • Napauta laudalla olevaa (ei-lukittua) palaa = poista
+      </p>
+
+      <p><b>Vihje (💡):</b> paljastaa yhden oikean palan (vihreällä).<br>
+         <b>Roskakori (🗑️):</b> poistaa kaikki omat (ei-lukitut) palat.</p>
+
+      <p><b>Sääntö:</b> Noudatetaan shakkipelin nappuloiden kuningas, kuningatar, torni, lähetti ja ratsu siirtosääntöjä.</p>
+
+      <p class="smallNote">Vinkki: jos et voi asettaa vihjettä, poista jokin asettamasi pala ja yritä uudelleen.</p>
+    </div>
+
+    <div class="modalBottom">
+      <button id="btnHelpOk" class="modalOk">OK</button>
+    </div>
+  </div>
 </div>
 
 
@@ -1609,6 +1722,37 @@ renderPalette();
 btnNew.addEventListener("click", startNewPuzzle);
 btnHint.addEventListener("click", revealOneCorrectPiece);
 btnClear.addEventListener("click", clearUserPieces);
+const btnHelp = document.getElementById("btnHelp");
+const helpModal = document.getElementById("helpModal");
+const btnHelpClose = document.getElementById("btnHelpClose");
+const btnHelpOk = document.getElementById("btnHelpOk");
+
+function openHelp(){
+  helpModal.classList.add("open");
+  helpModal.setAttribute("aria-hidden","false");
+}
+
+function closeHelp(){
+  helpModal.classList.remove("open");
+  helpModal.setAttribute("aria-hidden","true");
+  // iPhone: poista fokus ettei “jää valituksi”
+  if(document.activeElement) document.activeElement.blur();
+}
+
+btnHelp.addEventListener("click", openHelp);
+btnHelpClose.addEventListener("click", closeHelp);
+btnHelpOk.addEventListener("click", closeHelp);
+
+// klikkaus taustaan sulkee
+helpModal.addEventListener("click", (e)=>{
+  if(e.target === helpModal) closeHelp();
+});
+
+// ESC sulkee (jos näppis käytössä)
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape" && helpModal.classList.contains("open")) closeHelp();
+});
+
 elDiff.addEventListener("change", startNewPuzzle);
 
 if(btnLoadLocal && fileSolutions){
